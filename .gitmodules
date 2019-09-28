@@ -1,0 +1,6 @@
+[submodule "external/libavif"]
+	path = external/libavif
+	url = https://github.com/AOMediaCodec/libavif.git
+[submodule "external/dav1d"]
+	path = external/dav1d
+	url = https://code.videolan.org/videolan/dav1d.git

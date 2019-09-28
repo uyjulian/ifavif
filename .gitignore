@@ -1,0 +1,16 @@
+*.pdb
+*.obj
+*.lib
+*.exp
+*.log
+*.tlog
+*.sdf
+*.suo
+*.user
+*.res
+*.sbr
+.vs/
+*.dll
+*.o
+*.7z
+*.spi
