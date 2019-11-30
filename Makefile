@@ -57,8 +57,12 @@ all: $(BINARY)
 archive: $(ARCHIVE)
 
 clean:
-	rm -f $(OBJECTS) $(BINARY) $(ARCHIVE) external/dav1d/build
+	rm -f $(OBJECTS) $(BINARY) $(ARCHIVE)
 	rm -rf external/dav1d/build
+
+external/dav1d/build/include/dav1d/version.h: external/dav1d/build/src/libdav1d.a
+
+external/libavif/src/codec_dav1d.c: external/dav1d/build/include/dav1d/version.h
 
 external/dav1d/build/src/libdav1d.a:
 	cd external/dav1d && meson build --buildtype release -Ddefault_library=both  --cross-file ~/mingw32_menson.txt && ninja -C build
