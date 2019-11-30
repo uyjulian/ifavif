@@ -50,19 +50,20 @@ int getBMPFromAVIF(uint8_t *input_data, long file_size,
 		memset(bitmap_data, 0, bit_length * height);
 		avifImageYUVToRGB(image);
 		for (int j = 0; j < height; j++) {
-			uint8_t *curbit = bitmap_data + j * bit_length;
+			uint8_t *curbit = bitmap_data + (height - (1 + j)) * bit_length;
 			for (int i = 0; i < width; i++) {
 				curbit[0] =
-				    image->rgbPlanes[2][i + (j * image->rgbRowBytes[2])]; // B
+				    image->rgbPlanes[AVIF_CHAN_B][i + (j * image->rgbRowBytes[AVIF_CHAN_B])]; // B
 				curbit[1] =
-				    image->rgbPlanes[1][i + (j * image->rgbRowBytes[1])]; // G
+				    image->rgbPlanes[AVIF_CHAN_G][i + (j * image->rgbRowBytes[AVIF_CHAN_G])]; // G
 				curbit[2] =
-				    image->rgbPlanes[0][i + (j * image->rgbRowBytes[0])]; // R
+				    image->rgbPlanes[AVIF_CHAN_R][i + (j * image->rgbRowBytes[AVIF_CHAN_R])]; // R
 				if (image->alphaPlane)
 					curbit[3] =
 					    image->alphaPlane[i + (j * image->alphaRowBytes)]; // A
 				else
 					curbit[3] = 0xFF;
+				curbit += 4;
 			}
 		}
 		avifImageDestroy(image);
@@ -156,7 +157,7 @@ int GetPictureEx(long data_size, HANDLE *bitmap_info, HANDLE *bitmap_data,
 		if (progress_callback(1, 1, user_data))
 			return SPI_ABORT;
 
-	if (!getBMPFromAVIF((uint8_t *)data, data_size, &bitmap_file_header,
+	if (getBMPFromAVIF((uint8_t *)data, data_size, &bitmap_file_header,
 	                    &bitmap_info_header, &data_u8))
 		return SPI_MEMORY_ERROR;
 	*bitmap_info = LocalAlloc(LMEM_MOVEABLE, sizeof(BITMAPINFOHEADER));
