@@ -19,4 +19,4 @@ Susie plugins are compatile with many programs, including these:
 
 ## License
 
-This project is licensed under a modified BSD license. Please read the `LICENSE` file for more information.
+This project is licensed under the MIT license. Please read the `LICENSE` file for more information.
