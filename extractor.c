@@ -14,17 +14,17 @@
 #include <string.h>
 
 const char *plugin_info[4] = {
-    "00IN",
-    "AVIF Plugin for Susie Image Viewer",
-    "*.avif",
-    "AVIF file (*.avif)",
+	"00IN",
+	"AVIF Plugin for Susie Image Viewer",
+	"*.avif",
+	"AVIF file (*.avif)",
 };
 
 const int header_size = 64;
 
 int getBMPFromAVIF(uint8_t *input_data, long file_size,
-                   BITMAPFILEHEADER *bitmap_file_header,
-                   BITMAPINFOHEADER *bitmap_info_header, uint8_t **data) {
+				   BITMAPFILEHEADER *bitmap_file_header,
+				   BITMAPINFOHEADER *bitmap_info_header, uint8_t **data) {
 
 	uint8_t *bitmap_data = NULL;
 
@@ -38,16 +38,16 @@ int getBMPFromAVIF(uint8_t *input_data, long file_size,
 
 	avifDecoder *decoder = avifDecoderCreate();
 	avifResult result = avifDecoderSetIOMemory(decoder, input_data, file_size);
-    if (result != AVIF_RESULT_OK)
-    {
-        goto cleanup;
-    }
+	if (result != AVIF_RESULT_OK)
+	{
+		goto cleanup;
+	}
 
-    result = avifDecoderParse(decoder);
-    if (result != AVIF_RESULT_OK)
-    {
-        goto cleanup;
-    }
+	result = avifDecoderParse(decoder);
+	if (result != AVIF_RESULT_OK)
+	{
+		goto cleanup;
+	}
 	result = avifDecoderNextImage(decoder);
 	if (result == AVIF_RESULT_OK) {
 		width = decoder->image->width;
@@ -55,31 +55,61 @@ int getBMPFromAVIF(uint8_t *input_data, long file_size,
 		bit_width = width * 4;
 		bit_length = bit_width;
 		avifRGBImageSetDefaults(&rgb, decoder->image);
-		avifRGBImageAllocatePixels(&rgb);
+		rgb.depth = 8;
+
 		bitmap_data = (uint8_t *)malloc(sizeof(uint8_t) * bit_length * height);
 		if (!bitmap_data)
 		{
 			goto cleanup;
 		}
+		rgb.pixels = bitmap_data;
+		rgb.rowBytes = sizeof(uint8_t) * bit_length;
 		memset(bitmap_data, 0, bit_length * height);
 		if (avifImageYUVToRGB(decoder->image, &rgb) != AVIF_RESULT_OK)
 		{
-            goto cleanup;
-        }
+			goto cleanup;
+		}
+		// Convert from RGBA to BGRA
+		for (int j = 0; j < height; j++)
+		{
+			uint8_t *curbit = bitmap_data + (height - (1 + j)) * bit_length;
+			for (int i = 0; i < width; i++)
+			{
+				uint8_t b = curbit[0];
+				uint8_t r = curbit[2];
+				curbit[2] = b;
+				curbit[0] = r;
+				curbit += 4;
+			}
+		}
+		// Flip along the horizontal axis
+		for (int j = 0; j < height / 2; j++)
+		{
+			uint8_t *curbit_1 = bitmap_data + j * bit_length;
+			uint8_t *curbit_2 = bitmap_data + (height - (1 + j)) * bit_length;
+			for (int i = 0; i < bit_width; i++)
+			{
+				uint8_t tmp = curbit_1[i];
+				curbit_1[i] = curbit_2[i];
+				curbit_2[i] = tmp;
+			}
+		}
+#if 0
 		for (int j = 0; j < height; j++) {
 			uint8_t *curbit = bitmap_data + (height - (1 + j)) * bit_length;
 			for (int i = 0; i < width; i++) {
 				curbit[0] =
-				    rgb.pixels[i + (j * rgb.rowBytes) + 2]; // B
+					rgb.pixels[i + (j * rgb.rowBytes) + 2]; // B
 				curbit[1] =
-				    rgb.pixels[i + (j * rgb.rowBytes) + 1]; // G
+					rgb.pixels[i + (j * rgb.rowBytes) + 1]; // G
 				curbit[2] =
-				    rgb.pixels[i + (j * rgb.rowBytes) + 0]; // R
+					rgb.pixels[i + (j * rgb.rowBytes) + 0]; // R
 				curbit[3] =
 					rgb.pixels[i + (j * rgb.rowBytes) + 3]; // A
 				curbit += 4;
 			}
 		}
+#endif
 	} else {
 		goto cleanup;
 	}
@@ -91,10 +121,10 @@ int getBMPFromAVIF(uint8_t *input_data, long file_size,
 
 	bitmap_file_header->bfType = 'M' * 256 + 'B';
 	bitmap_file_header->bfSize = sizeof(BITMAPFILEHEADER) +
-	                             sizeof(BITMAPINFOHEADER) +
-	                             sizeof(uint8_t) * bit_length * height;
+								 sizeof(BITMAPINFOHEADER) +
+								 sizeof(uint8_t) * bit_length * height;
 	bitmap_file_header->bfOffBits =
-	    sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+		sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
 	bitmap_file_header->bfReserved1 = 0;
 	bitmap_file_header->bfReserved2 = 0;
 
@@ -106,7 +136,7 @@ int getBMPFromAVIF(uint8_t *input_data, long file_size,
 	bitmap_info_header->biCompression = 0;
 	bitmap_info_header->biSizeImage = bitmap_file_header->bfSize;
 	bitmap_info_header->biXPelsPerMeter = bitmap_info_header->biYPelsPerMeter =
-	    0;
+		0;
 	bitmap_info_header->biClrUsed = 0;
 	bitmap_info_header->biClrImportant = 0;
 	ret_result = 0;
@@ -115,14 +145,13 @@ cleanup:
 	{
 		free(bitmap_data);
 	}
-	avifRGBImageFreePixels(&rgb);
 	avifDecoderDestroy(decoder);
 	return ret_result;
 }
 
 BOOL IsSupportedEx(char *filename, char *data) {
 	const char header[] = {0x00, 0x00, 0x00, '?', 'f', 't',
-	                       'y',  'p',  'a',  'v',  'i', 'f'};
+						   'y',  'p',  'a',  'v',  'i', 'f'};
 	for (int i = 0; i < sizeof(header); i++)
 	{
 		if (header[i] == '?')
@@ -138,7 +167,7 @@ BOOL IsSupportedEx(char *filename, char *data) {
 }
 
 int GetPictureInfoEx(long data_size, char *data,
-                     struct PictureInfo *picture_info) {
+					 struct PictureInfo *picture_info) {
 	int width = 0;
 	int height = 0;
 	int ret_result = SPI_MEMORY_ERROR;
@@ -173,7 +202,7 @@ cleanup:
 }
 
 int GetPictureEx(long data_size, HANDLE *bitmap_info, HANDLE *bitmap_data,
-                 SPI_PROGRESS progress_callback, long user_data, char *data) {
+				 SPI_PROGRESS progress_callback, long user_data, char *data) {
 	uint8_t *data_u8;
 	BITMAPINFOHEADER bitmap_info_header;
 	BITMAPFILEHEADER bitmap_file_header;
@@ -185,11 +214,11 @@ int GetPictureEx(long data_size, HANDLE *bitmap_info, HANDLE *bitmap_data,
 			return SPI_ABORT;
 
 	if (getBMPFromAVIF((uint8_t *)data, data_size, &bitmap_file_header,
-	                    &bitmap_info_header, &data_u8))
+						&bitmap_info_header, &data_u8))
 		return SPI_MEMORY_ERROR;
 	*bitmap_info = LocalAlloc(LMEM_MOVEABLE, sizeof(BITMAPINFOHEADER));
 	*bitmap_data = LocalAlloc(LMEM_MOVEABLE, bitmap_file_header.bfSize -
-	                                             bitmap_file_header.bfOffBits);
+												 bitmap_file_header.bfOffBits);
 	if (*bitmap_info == NULL || *bitmap_data == NULL) {
 		if (*bitmap_info != NULL)
 			LocalFree(*bitmap_info);
@@ -216,7 +245,7 @@ int GetPictureEx(long data_size, HANDLE *bitmap_info, HANDLE *bitmap_data,
 	bitmap_info_locked->bmiHeader.biClrUsed = 0;
 	bitmap_info_locked->bmiHeader.biClrImportant = 0;
 	memcpy(bitmap_data_locked, data_u8,
-	       bitmap_file_header.bfSize - bitmap_file_header.bfOffBits);
+		   bitmap_file_header.bfSize - bitmap_file_header.bfOffBits);
 
 	LocalUnlock(*bitmap_info);
 	LocalUnlock(*bitmap_data);
