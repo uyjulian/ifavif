@@ -63,7 +63,7 @@ external/libavif/src/codec_dav1d.c: external/dav1d/build/include/dav1d/version.h
 external/dav1d/build/src/libdav1d.a:
 	cd external/dav1d && meson build --buildtype release -Ddefault_library=static --cross-file ../meson_toolchains/mingw32_meson.ini && ninja -C build
 
-$(ARCHIVE): $(BINARY) 
+$(ARCHIVE): $(BINARY_STRIPPED)
 	rm -f $(ARCHIVE)
 	7z a $@ $^
 
