@@ -4,3 +4,6 @@
 [submodule "external/dav1d"]
 	path = external/dav1d
 	url = https://code.videolan.org/videolan/dav1d.git
+[submodule "external/meson_toolchains"]
+	path = external/meson_toolchains
+	url = https://github.com/uyjulian/meson_toolchains.git

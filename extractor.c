@@ -28,49 +28,60 @@ int getBMPFromAVIF(uint8_t *input_data, long file_size,
 
 	uint8_t *bitmap_data = NULL;
 
+	int ret_result = -1;
+
 	int width = 0;
 	int height = 0;
 	int bit_width, bit_length;
-	avifROData raw;
-	raw.data = input_data;
-	raw.size = file_size;
+	avifRGBImage rgb;
+	memset(&rgb, 0, sizeof(rgb));
 
-	avifImage *image = avifImageCreateEmpty();
 	avifDecoder *decoder = avifDecoderCreate();
-	avifResult decodeResult = avifDecoderRead(decoder, image, &raw);
-	if (decodeResult == AVIF_RESULT_OK) {
-		avifDecoderDestroy(decoder);
-		width = image->width;
-		height = image->height;
+	avifResult result = avifDecoderSetIOMemory(decoder, input_data, file_size);
+    if (result != AVIF_RESULT_OK)
+    {
+        goto cleanup;
+    }
+
+    result = avifDecoderParse(decoder);
+    if (result != AVIF_RESULT_OK)
+    {
+        goto cleanup;
+    }
+	result = avifDecoderNextImage(decoder);
+	if (result == AVIF_RESULT_OK) {
+		width = decoder->image->width;
+		height = decoder->image->height;
 		bit_width = width * 4;
 		bit_length = bit_width;
+		avifRGBImageSetDefaults(&rgb, decoder->image);
+		avifRGBImageAllocatePixels(&rgb);
 		bitmap_data = (uint8_t *)malloc(sizeof(uint8_t) * bit_length * height);
 		if (!bitmap_data)
-			return -1;
+		{
+			goto cleanup;
+		}
 		memset(bitmap_data, 0, bit_length * height);
-		avifImageYUVToRGB(image);
+		if (avifImageYUVToRGB(decoder->image, &rgb) != AVIF_RESULT_OK)
+		{
+            goto cleanup;
+        }
 		for (int j = 0; j < height; j++) {
 			uint8_t *curbit = bitmap_data + (height - (1 + j)) * bit_length;
 			for (int i = 0; i < width; i++) {
 				curbit[0] =
-				    image->rgbPlanes[AVIF_CHAN_B][i + (j * image->rgbRowBytes[AVIF_CHAN_B])]; // B
+				    rgb.pixels[i + (j * rgb.rowBytes) + 2]; // B
 				curbit[1] =
-				    image->rgbPlanes[AVIF_CHAN_G][i + (j * image->rgbRowBytes[AVIF_CHAN_G])]; // G
+				    rgb.pixels[i + (j * rgb.rowBytes) + 1]; // G
 				curbit[2] =
-				    image->rgbPlanes[AVIF_CHAN_R][i + (j * image->rgbRowBytes[AVIF_CHAN_R])]; // R
-				if (image->alphaPlane)
-					curbit[3] =
-					    image->alphaPlane[i + (j * image->alphaRowBytes)]; // A
-				else
-					curbit[3] = 0xFF;
+				    rgb.pixels[i + (j * rgb.rowBytes) + 0]; // R
+				curbit[3] =
+					rgb.pixels[i + (j * rgb.rowBytes) + 3]; // A
 				curbit += 4;
 			}
 		}
-		avifImageDestroy(image);
 	} else {
-		avifDecoderDestroy(decoder);
-		avifImageDestroy(image);
-		return -1;
+		goto cleanup;
 	}
 
 	*data = bitmap_data;
@@ -98,7 +109,15 @@ int getBMPFromAVIF(uint8_t *input_data, long file_size,
 	    0;
 	bitmap_info_header->biClrUsed = 0;
 	bitmap_info_header->biClrImportant = 0;
-	return 0;
+	ret_result = 0;
+cleanup:
+	if (ret_result && bitmap_data)
+	{
+		free(bitmap_data);
+	}
+	avifRGBImageFreePixels(&rgb);
+	avifDecoderDestroy(decoder);
+	return ret_result;
 }
 
 BOOL IsSupportedEx(char *filename, char *data) {
@@ -115,23 +134,21 @@ int GetPictureInfoEx(long data_size, char *data,
                      struct PictureInfo *picture_info) {
 	int width = 0;
 	int height = 0;
-	avifROData raw;
-	raw.data = (uint8_t *)data;
-	raw.size = data_size;
+	int ret_result = SPI_MEMORY_ERROR;
 
-	avifImage *image = avifImageCreateEmpty();
 	avifDecoder *decoder = avifDecoderCreate();
-	avifResult decodeResult = avifDecoderRead(decoder, image, &raw);
-	if (decodeResult == AVIF_RESULT_OK) {
-		avifDecoderDestroy(decoder);
-		width = image->width;
-		height = image->height;
-		avifImageDestroy(image);
-	} else {
-		avifDecoderDestroy(decoder);
-		avifImageDestroy(image);
-		return SPI_MEMORY_ERROR;
+	avifResult result = avifDecoderSetIOMemory(decoder, (uint8_t *)data, data_size);
+	if (result != AVIF_RESULT_OK)
+	{
+		goto cleanup;
 	}
+	result = avifDecoderParse(decoder);
+	if (result != AVIF_RESULT_OK)
+	{
+		goto cleanup;
+	}
+	width = decoder->image->width;
+	height = decoder->image->height;
 
 	picture_info->left = 0;
 	picture_info->top = 0;
@@ -142,7 +159,10 @@ int GetPictureInfoEx(long data_size, char *data,
 	picture_info->colorDepth = 32;
 	picture_info->hInfo = NULL;
 
-	return SPI_ALL_RIGHT;
+	ret_result = SPI_ALL_RIGHT;
+cleanup:
+	avifDecoderDestroy(decoder);
+	return ret_result;
 }
 
 int GetPictureEx(long data_size, HANDLE *bitmap_info, HANDLE *bitmap_data,
