@@ -1,16 +1,18 @@
 #############################################
 ##                                         ##
-##    Copyright (C) 2019-2019 Julian Uy    ##
+##    Copyright (C) 2019-2021 Julian Uy    ##
 ##  https://sites.google.com/site/awertyb  ##
 ##                                         ##
 ##   See details of license at "LICENSE"   ##
 ##                                         ##
 #############################################
 
-CC = i686-w64-mingw32-gcc
-CXX = i686-w64-mingw32-g++
-AR = i686-w64-mingw32-ar
-WINDRES = i686-w64-mingw32-windres
+TOOL_TRIPLET_PREFIX ?= i686-w64-mingw32-
+CC := $(TOOL_TRIPLET_PREFIX)gcc
+CXX := $(TOOL_TRIPLET_PREFIX)g++
+AR := $(TOOL_TRIPLET_PREFIX)ar
+WINDRES := $(TOOL_TRIPLET_PREFIX)windres
+STRIP := $(TOOL_TRIPLET_PREFIX)strip
 GIT_TAG := $(shell git describe --abbrev=0 --tags)
 INCFLAGS += -I. -I.. -Iexternal/dav1d/include -Iexternal/dav1d/build/include/dav1d -Iexternal/libavif/include
 ALLSRCFLAGS += $(INCFLAGS) -DGIT_TAG=\"$(GIT_TAG)\"
@@ -42,15 +44,16 @@ OBJECTS := $(SOURCES:.c=.o)
 OBJECTS := $(OBJECTS:.cpp=.o)
 OBJECTS := $(OBJECTS:.rc=.o)
 
-BINARY ?= ifavif.spi
+BINARY ?= ifavif_unstripped.spi
+BINARY_STRIPPED ?= ifavif.spi
 ARCHIVE ?= ifavif.$(GIT_TAG).7z
 
-all: $(BINARY)
+all: $(BINARY_STRIPPED)
 
 archive: $(ARCHIVE)
 
 clean:
-	rm -f $(OBJECTS) $(BINARY) $(ARCHIVE)
+	rm -f $(OBJECTS) $(BINARY) $(BINARY_STRIPPED) $(ARCHIVE)
 	rm -rf external/dav1d/build
 
 external/dav1d/build/include/dav1d/version.h: external/dav1d/build/src/libdav1d.a
@@ -63,6 +66,10 @@ external/dav1d/build/src/libdav1d.a:
 $(ARCHIVE): $(BINARY) 
 	rm -f $(ARCHIVE)
 	7z a $@ $^
+
+$(BINARY_STRIPPED): $(BINARY)
+	@printf '\t%s %s\n' STRIP $@
+	$(STRIP) -o $@ $^
 
 $(BINARY): $(OBJECTS) 
 	@printf '\t%s %s\n' LNK $@
