@@ -121,11 +121,18 @@ cleanup:
 }
 
 BOOL IsSupportedEx(char *filename, char *data) {
-	const char header[] = {0x00, 0x00, 0x00, 0x20, 'f', 't',
+	const char header[] = {0x00, 0x00, 0x00, '?', 'f', 't',
 	                       'y',  'p',  'a',  'v',  'i', 'f'};
-	for (int i = 0; i < sizeof(header); i++) {
+	for (int i = 0; i < sizeof(header); i++)
+	{
+		if (header[i] == '?')
+		{
+			continue;
+		}
 		if (data[i] != header[i])
+		{
 			return FALSE;
+		}
 	}
 	return TRUE;
 }
