@@ -22,7 +22,7 @@ const char *plugin_info[4] = {
 
 const int header_size = 64;
 
-int getBMPFromAVIF(uint8_t *input_data, long file_size,
+int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 				   BITMAPFILEHEADER *bitmap_file_header,
 				   BITMAPINFOHEADER *bitmap_info_header, uint8_t **data) {
 
@@ -149,7 +149,7 @@ cleanup:
 	return ret_result;
 }
 
-BOOL IsSupportedEx(char *filename, char *data) {
+BOOL IsSupportedEx(const char *data) {
 	const char header[] = {0x00, 0x00, 0x00, '?', 'f', 't',
 						   'y',  'p',  'a',  'v',  'i', 'f'};
 	for (int i = 0; i < sizeof(header); i++)
@@ -166,8 +166,8 @@ BOOL IsSupportedEx(char *filename, char *data) {
 	return TRUE;
 }
 
-int GetPictureInfoEx(long data_size, char *data,
-					 struct PictureInfo *picture_info) {
+int GetPictureInfoEx(size_t data_size, const char *data, SusiePictureInfo *picture_info)
+{
 	int width = 0;
 	int height = 0;
 	int ret_result = SPI_MEMORY_ERROR;
@@ -201,8 +201,7 @@ cleanup:
 	return ret_result;
 }
 
-int GetPictureEx(long data_size, HANDLE *bitmap_info, HANDLE *bitmap_data,
-				 SPI_PROGRESS progress_callback, long user_data, char *data) {
+int GetPictureEx(size_t data_size, HANDLE *bitmap_info, HANDLE *bitmap_data, SPI_PROGRESS progress_callback, intptr_t user_data, const char *data) {
 	uint8_t *data_u8;
 	BITMAPINFOHEADER bitmap_info_header;
 	BITMAPFILEHEADER bitmap_file_header;

@@ -22,7 +22,7 @@ CFLAGS += -D_USRDLL -DUNICODE -D_UNICODE
 CFLAGS += -DAVIF_CODEC_DAV1D=1
 CXXFLAGS += $(CFLAGS) -fpermissive
 WINDRESFLAGS += $(ALLSRCFLAGS) --codepage=65001
-LDFLAGS += -static -static-libgcc -shared -Wl,--kill-at
+LDFLAGS += -static -static-libgcc -shared -Wl,--add-stdcall-alias
 LDLIBS +=
 
 %.o: %.c
