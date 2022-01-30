@@ -46,7 +46,7 @@ OBJECTS := $(OBJECTS:.rc=.o)
 
 BINARY ?= ifavif_unstripped.spi
 BINARY_STRIPPED ?= ifavif.spi
-ARCHIVE ?= ifavif.$(GIT_TAG).7z
+ARCHIVE ?= ifavif.7z
 
 all: $(BINARY_STRIPPED)
 
