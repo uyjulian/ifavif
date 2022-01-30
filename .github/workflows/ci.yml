@@ -35,7 +35,7 @@ jobs:
           submodules: recursive
       - name: Set up default build tools
         run: |
-          brew install make nasm meson ninja
+          brew install make nasm cmake meson ninja
       - name: Set up mingw-w64
         run: |
           brew install mingw-w64
