@@ -44,7 +44,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: ifavif-win32
-          path: ifavif.*.7z
+          path: ifavif.7z
 
   create-release:
     needs: [build-win32]
