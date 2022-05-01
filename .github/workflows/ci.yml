@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        target_arch: ["intel32", "intel64"]
+        target_arch: ["intel32", "intel64", "arm32", "arm64"]
     env:
       HOMEBREW_NO_ANALYTICS: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
