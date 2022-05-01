@@ -110,6 +110,16 @@ jobs:
       with:
         name: binary-win32-intel64-clang
 
+    - name: Download win32 arm32 clang artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: binary-win32-arm32-clang
+
+    - name: Download win32 arm64 clang artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: binary-win32-arm64-clang
+
     - name: Create release
       if: startsWith(github.ref, 'refs/tags/v')
       uses: marvinpinto/action-automatic-releases@latest
@@ -121,3 +131,5 @@ jobs:
           binary-win32-intel64-gcc/**.7z
           binary-win32-intel32-clang/**.7z
           binary-win32-intel64-clang/**.7z
+          binary-win32-arm32-clang/**.7z
+          binary-win32-arm64-clang/**.7z
