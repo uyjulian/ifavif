@@ -70,7 +70,7 @@ CFLAGS += -MMD -MF $(patsubst %$(OBJECT_EXTENSION),%$(DEP_EXTENSION),$@)
 CFLAGS += -DAVIF_CODEC_DAV1D=1
 CXXFLAGS += $(CFLAGS) -fpermissive
 WINDRESFLAGS += $(ALLSRCFLAGS) --codepage=65001
-LDFLAGS += $(OPTFLAGS) -static -static-libgcc -Wl,--add-stdcall-alias -fPIC
+LDFLAGS += $(OPTFLAGS) -static -static-libgcc -Wl,--kill-at -fPIC
 LDFLAGS_LIB += -shared
 LDLIBS +=
 
