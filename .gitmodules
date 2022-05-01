@@ -1,9 +1,12 @@
 [submodule "external/libavif"]
 	path = external/libavif
 	url = https://github.com/AOMediaCodec/libavif.git
+	ignore = dirty
 [submodule "external/dav1d"]
 	path = external/dav1d
 	url = https://code.videolan.org/videolan/dav1d.git
+	ignore = dirty
 [submodule "external/meson_toolchains"]
 	path = external/meson_toolchains
 	url = https://github.com/uyjulian/meson_toolchains.git
+	ignore = dirty
