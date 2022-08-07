@@ -12,6 +12,13 @@ The following binaries are available:
 * [Win32 (ARM 32-bit Clang)](https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.arm32.clang.7z)  
 * [Win32 (ARM 64-bit Clang)](https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.arm64.clang.7z)  
 
+## Preparing the environment
+
+* Ubuntu
+```
+$ sudo apt install mingw-w64 meson nasm
+```
+
 ## Building
 
 After cloning submodules and preparing the environment, a simple invocation of `make` will generate `ifavif.spi`.  
