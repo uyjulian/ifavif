@@ -36,7 +36,7 @@ EXPORT(int) GetPluginInfoW(int info_number, LPWSTR buffer, int buffer_length)
 		return 0;
 	}
 
-	int ret = _snwprintf(buffer, buffer_length, L"%s", plugin_info[info_number]);
+	int ret = _snwprintf(buffer, buffer_length, L"%hs", plugin_info[info_number]);
 	if (ret > buffer_length)
 	{
 		ret = buffer_length;
