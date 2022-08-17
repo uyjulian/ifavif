@@ -107,7 +107,7 @@ endif
 ARCHIVE ?= $(PROJECT_BASENAME).$(TARGET_ARCH).7z
 
 LIBDAV1D_LIBS += external/dav1d/$(BUILD_DIR_EXTERNAL_NAME)/src/libdav1d.a
-LIBAVIF_SOURCES += external/libavif/src/codec_dav1d.c external/libavif/src/alpha.c external/libavif/src/avif.c external/libavif/src/colr.c external/libavif/src/io.c external/libavif/src/mem.c external/libavif/src/obu.c external/libavif/src/rawdata.c external/libavif/src/read.c external/libavif/src/reformat.c external/libavif/src/reformat_libyuv.c external/libavif/src/stream.c external/libavif/src/utils.c external/libavif/src/write.c
+LIBAVIF_SOURCES += external/libavif/src/codec_dav1d.c external/libavif/src/alpha.c external/libavif/src/avif.c external/libavif/src/colr.c external/libavif/src/io.c external/libavif/src/mem.c external/libavif/src/obu.c external/libavif/src/rawdata.c external/libavif/src/read.c external/libavif/src/reformat.c external/libavif/src/reformat_libyuv.c external/libavif/src/stream.c external/libavif/src/utils.c external/libavif/src/write.c external/libavif/src/diag.c external/libavif/src/scale.c
 SOURCES := extractor.c spi00in.c ifavif.rc $(LIBAVIF_SOURCES)
 OBJECTS := $(SOURCES:.c=$(OBJECT_EXTENSION))
 OBJECTS := $(OBJECTS:.cpp=$(OBJECT_EXTENSION))
