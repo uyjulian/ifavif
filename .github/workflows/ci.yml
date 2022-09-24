@@ -40,10 +40,10 @@ jobs:
           submodules: recursive
       - name: Set up default build tools
         run: |
-          brew install make nasm cmake meson ninja
+          /home/linuxbrew/.linuxbrew/bin/brew install make nasm cmake meson ninja
       - name: Set up mingw-w64
         run: |
-          brew install mingw-w64
+          /home/linuxbrew/.linuxbrew/bin/brew install mingw-w64
       - name: Compile project
         run: make TARGET_ARCH=${{ matrix.target_arch }} ARCHIVE=${GITHUB_REPOSITORY#*/}.${{ matrix.target_arch }}.gcc.7z archive -j$(getconf _NPROCESSORS_ONLN)
       - name: Upload artifact
@@ -69,7 +69,7 @@ jobs:
           submodules: recursive
       - name: Set up default build tools
         run: |
-          brew install make nasm cmake meson ninja
+          /home/linuxbrew/.linuxbrew/bin/brew install make nasm cmake meson ninja
       - name: Set up mingw-w64
         run: |
           curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20220323/llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64.tar.xz
