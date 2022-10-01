@@ -56,6 +56,7 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		bit_length = bit_width;
 		avifRGBImageSetDefaults(&rgb, decoder->image);
 		rgb.depth = 8;
+		rgb.format = AVIF_RGB_FORMAT_BGRA;
 
 		bitmap_data = (uint8_t *)malloc(sizeof(uint8_t) * bit_length * height);
 		if (!bitmap_data)
@@ -68,19 +69,6 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		if (avifImageYUVToRGB(decoder->image, &rgb) != AVIF_RESULT_OK)
 		{
 			goto cleanup;
-		}
-		// Convert from RGBA to BGRA
-		for (int j = 0; j < height; j++)
-		{
-			uint8_t *curbit = bitmap_data + (height - (1 + j)) * bit_length;
-			for (int i = 0; i < width; i++)
-			{
-				uint8_t b = curbit[0];
-				uint8_t r = curbit[2];
-				curbit[2] = b;
-				curbit[0] = r;
-				curbit += 4;
-			}
 		}
 		// Flip along the horizontal axis
 		for (int j = 0; j < height / 2; j++)
