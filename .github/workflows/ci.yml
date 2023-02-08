@@ -93,7 +93,7 @@
         },
         {
           "name" : "Set up default build tools",
-          "run" : "brew install make nasm cmake ninja"
+          "run" : "brew install make nasm cmake meson ninja"
         },
         {
           "name" : "Set up mingw-w64 for GCC",
