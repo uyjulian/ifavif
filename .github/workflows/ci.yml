@@ -1,143 +1,147 @@
-name: Continuous Integration
-on:
-  push:
-    paths:
-      - "**.c"
-      - "**.h"
-      - "**.cpp"
-      - "**.hpp"
-      - "**.build"
-      - "**.in"
-      - "**.yml"
-      - "Makefile"
-  pull_request:
-    paths:
-      - "**.c"
-      - "**.h"
-      - "**.cpp"
-      - "**.hpp"
-      - "**.build"
-      - "**.in"
-      - "**.yml"
-      - "Makefile"
-
-jobs:
-  build-win32-gcc:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        target_arch: ["intel32", "intel64"]
-    timeout-minutes: 20
-    env:
-      HOMEBREW_NO_ANALYTICS: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALL_UPGRADE: 1
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      CMAKE_GENERATOR: Ninja
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Set up Homebrew environment for Github Actions
-        run: |
-          echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
-      - name: Set up default build tools
-        run: |
-          brew install make nasm cmake meson ninja
-      - name: Set up mingw-w64
-        run: |
-          brew install mingw-w64
-      - name: Compile project
-        run: make TARGET_ARCH=${{ matrix.target_arch }} ARCHIVE=${GITHUB_REPOSITORY#*/}.${{ matrix.target_arch }}.gcc.7z archive -j$(getconf _NPROCESSORS_ONLN)
-      - name: Upload artifact
-        uses: actions/upload-artifact@master
-        with:
-          name: binary-win32-${{ matrix.target_arch }}-gcc
-          path: ./**.${{ matrix.target_arch }}.gcc.7z
-
-  build-win32-clang:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        target_arch: ["intel32", "intel64", "arm32", "arm64"]
-    env:
-      HOMEBREW_NO_ANALYTICS: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALL_UPGRADE: 1
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      CMAKE_GENERATOR: Ninja
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Set up Homebrew environment for Github Actions
-        run: |
-          echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
-      - name: Set up default build tools
-        run: |
-          brew install make nasm cmake meson ninja
-      - name: Set up mingw-w64
-        run: |
-          curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20220323/llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64.tar.xz
-          tar xvf llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64.tar.xz
-          mv llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64 /opt/llvm-mingw
-          export PATH="/opt/llvm-mingw/bin:$PATH"
-          echo "/opt/llvm-mingw/bin" >> $GITHUB_PATH
-      - name: Compile project
-        run: make TARGET_ARCH=${{ matrix.target_arch }} ARCHIVE=${GITHUB_REPOSITORY#*/}.${{ matrix.target_arch }}.clang.7z archive -j$(getconf _NPROCESSORS_ONLN)
-      - name: Upload artifact
-        uses: actions/upload-artifact@master
-        with:
-          name: binary-win32-${{ matrix.target_arch }}-clang
-          path: ./**.${{ matrix.target_arch }}.clang.7z
-
-  create-release:
-    needs: [build-win32-gcc, build-win32-clang]
-    runs-on: ubuntu-20.04
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-    - name: Download win32 intel32 gcc artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: binary-win32-intel32-gcc
-
-    - name: Download win32 intel64 gcc artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: binary-win32-intel64-gcc
-
-    - name: Download win32 intel32 clang artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: binary-win32-intel32-clang
-
-    - name: Download win32 intel64 clang artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: binary-win32-intel64-clang
-
-    - name: Download win32 arm32 clang artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: binary-win32-arm32-clang
-
-    - name: Download win32 arm64 clang artifact
-      uses: actions/download-artifact@v1
-      with:
-        name: binary-win32-arm64-clang
-
-    - name: Create release
-      if: startsWith(github.ref, 'refs/tags/v')
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: "${{ contains(github.ref, '-rc') }}"
-        files: |
-          binary-win32-intel32-gcc/**.7z
-          binary-win32-intel64-gcc/**.7z
-          binary-win32-intel32-clang/**.7z
-          binary-win32-intel64-clang/**.7z
-          binary-win32-arm32-clang/**.7z
-          binary-win32-arm64-clang/**.7z
+{
+  "name" : "Continuous Integration",
+  "on" : {
+    "push" : {
+      "paths" : [
+        "**.c",
+        "**.h",
+        "**.cpp",
+        "**.hpp",
+        "**.build",
+        "**.in",
+        "**.yml",
+        "Makefile"
+      ]
+    },
+    "pull_request" : {
+      "paths" : [
+        "**.c",
+        "**.h",
+        "**.cpp",
+        "**.hpp",
+        "**.build",
+        "**.in",
+        "**.yml",
+        "Makefile"
+      ]
+    }
+  },
+  "jobs" : {
+    "build-win32" : {
+      "runs-on" : "ubuntu-20.04",
+      "strategy" : {
+        "matrix" : {
+          "platform" : [
+            {
+              "triplet" : "i686-w64-mingw32",
+              "cmake-system-compiler" : "i686",
+              "target-arch" : "intel32",
+              "compiler" : "gcc"
+            },
+            {
+              "triplet" : "x86_64-w64-mingw32",
+              "cmake-system-compiler" : "amd64",
+              "target-arch" : "intel64",
+              "compiler" : "gcc"
+            },
+            {
+              "triplet" : "i686-w64-mingw32",
+              "cmake-system-compiler" : "i686",
+              "target-arch" : "intel32",
+              "compiler" : "clang"
+            },
+            {
+              "triplet" : "x86_64-w64-mingw32",
+              "cmake-system-compiler" : "amd64",
+              "target-arch" : "intel64",
+              "compiler" : "clang"
+            },
+            {
+              "triplet" : "armv7-w64-mingw32",
+              "cmake-system-compiler" : "arm",
+              "target-arch" : "arm32",
+              "compiler" : "clang"
+            },
+            {
+              "triplet" : "aarch64-w64-mingw32",
+              "cmake-system-compiler" : "arm64",
+              "target-arch" : "arm64",
+              "compiler" : "clang"
+            }
+          ]
+        }
+      },
+      "timeout-minutes" : 30,
+      "env" : {
+        "HOMEBREW_NO_ANALYTICS" : "1",
+        "HOMEBREW_NO_AUTO_UPDATE" : "1",
+        "HOMEBREW_NO_INSTALL_UPGRADE" : "1",
+        "HOMEBREW_NO_INSTALL_CLEANUP" : "1",
+        "CMAKE_GENERATOR" : "Ninja"
+      },
+      "steps" : [
+        {
+          "name" : "Checkout repository",
+          "uses" : "actions/checkout@v2",
+          "with" : {
+            "submodules" : "recursive"
+          }
+        },
+        {
+          "name" : "Set up Homebrew environment for Github Actions",
+          "run" : "echo \"/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin\" >> $GITHUB_PATH"
+        },
+        {
+          "name" : "Set up default build tools",
+          "run" : "brew install make nasm cmake ninja"
+        },
+        {
+          "name" : "Set up mingw-w64 for GCC",
+          "if" : "matrix.platform.compiler == 'gcc'",
+          "run" : "brew install mingw-w64"
+        },
+        {
+          "name" : "Set up mingw-w64 for Clang",
+          "if" : "matrix.platform.compiler == 'clang'",
+          "run" : "curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20220323/llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64.tar.xz\ntar xvf llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64.tar.xz\nmv llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64 /opt/llvm-mingw\nexport PATH=\"/opt/llvm-mingw/bin:$PATH\"\necho \"/opt/llvm-mingw/bin\" >> $GITHUB_PATH"
+        },
+        {
+          "name" : "Compile project",
+          "run" : "make TARGET_ARCH=${{ matrix.platform.target-arch }} ARCHIVE=\\$\\(PROJECT_BASENAME\\).${{ matrix.platform.target-arch }}.${{ matrix.platform.compiler }}.7z archive -j$(getconf _NPROCESSORS_ONLN)"
+        },
+        {
+          "name" : "Upload artifact",
+          "uses" : "actions/upload-artifact@master",
+          "with" : {
+            "name" : "binary-win32-${{ matrix.platform.target-arch }}-${{ matrix.platform.compiler }}",
+            "path" : "**/**.${{ matrix.platform.target-arch }}.${{ matrix.platform.compiler }}.7z"
+          }
+        }
+      ]
+    },
+    "create-release" : {
+      "needs" : [
+        "build-win32"
+      ],
+      "runs-on" : "ubuntu-20.04",
+      "timeout-minutes" : 5,
+      "if" : "startsWith(github.ref, 'refs/tags/v')",
+      "steps" : [
+        {
+          "name" : "Download all artifacts",
+          "uses" : "actions/download-artifact@v3"
+        },
+        {
+          "name" : "Create release",
+          "if" : "startsWith(github.ref, 'refs/tags/v')",
+          "uses" : "marvinpinto/action-automatic-releases@latest",
+          "with" : {
+            "repo_token" : "${{ secrets.GITHUB_TOKEN }}",
+            "prerelease" : "${{ contains(github.ref, '-rc') }}",
+            "files" : "**/**.7z"
+          }
+        }
+      ]
+    }
+  }
+}
