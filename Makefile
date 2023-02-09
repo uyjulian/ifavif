@@ -42,9 +42,8 @@ OBJECT_EXTENSION ?= .o
 endif
 OBJECT_EXTENSION ?= .$(TARGET_ARCH).o
 DEP_EXTENSION ?= .dep.make
-BUILD_DIR_EXTERNAL_NAME ?= build-$(TARGET_ARCH)
 export GIT_TAG := $(shell git describe --abbrev=0 --tags)
-INCFLAGS += -I. -I.. -Iexternal/dav1d/include -Iexternal/dav1d/$(BUILD_DIR_EXTERNAL_NAME)/include/dav1d -Iexternal/libavif/include
+INCFLAGS += -I. -I..
 ALLSRCFLAGS += $(INCFLAGS) -DGIT_TAG=\"$(GIT_TAG)\"
 OPTFLAGS := -O3
 ifeq (x$(TARGET_ARCH),xintel32)
@@ -73,6 +72,12 @@ WINDRESFLAGS += $(ALLSRCFLAGS) --codepage=65001
 LDFLAGS += $(OPTFLAGS) -static -static-libgcc -Wl,--kill-at -fPIC
 LDFLAGS_LIB += -shared
 LDLIBS +=
+
+DEPENDENCY_SOURCE_DIRECTORY := $(abspath build-source)
+DEPENDENCY_BUILD_DIRECTORY := $(abspath build-$(TARGET_ARCH))
+DEPENDENCY_OUTPUT_DIRECTORY := $(abspath build-libraries)-$(TARGET_ARCH)
+
+INCFLAGS += -I$(DEPENDENCY_OUTPUT_DIRECTORY)/include
 
 %$(OBJECT_EXTENSION): %.c
 	@printf '\t%s %s\n' CC $<
@@ -106,14 +111,19 @@ ARCHIVE ?= $(PROJECT_BASENAME).$(TARGET_ARCH).$(GIT_TAG).7z
 endif
 ARCHIVE ?= $(PROJECT_BASENAME).$(TARGET_ARCH).7z
 
-LIBDAV1D_LIBS += external/dav1d/$(BUILD_DIR_EXTERNAL_NAME)/src/libdav1d.a
-LIBAVIF_SOURCES += external/libavif/src/codec_dav1d.c external/libavif/src/alpha.c external/libavif/src/avif.c external/libavif/src/colr.c external/libavif/src/io.c external/libavif/src/mem.c external/libavif/src/obu.c external/libavif/src/rawdata.c external/libavif/src/read.c external/libavif/src/reformat.c external/libavif/src/reformat_libyuv.c external/libavif/src/stream.c external/libavif/src/utils.c external/libavif/src/write.c external/libavif/src/diag.c external/libavif/src/scale.c external/libavif/src/exif.c external/libavif/src/reformat_libsharpyuv.c
-SOURCES := extractor.c spi00in.c ifavif.rc $(LIBAVIF_SOURCES)
+DEPENDENCY_BUILD_DIRECTORY_DAV1D := $(DEPENDENCY_BUILD_DIRECTORY)/dav1d
+DEPENDENCY_BUILD_DIRECTORY_LIBAVIF := $(DEPENDENCY_BUILD_DIRECTORY)/libavif
+
+LIBDAV1D_LIBS += $(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libdav1d.a
+LIBAVIF_LIBS += $(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libavif.a
+SOURCES := extractor.c spi00in.c ifavif.rc
 OBJECTS := $(SOURCES:.c=$(OBJECT_EXTENSION))
 OBJECTS := $(OBJECTS:.cpp=$(OBJECT_EXTENSION))
 OBJECTS := $(OBJECTS:.rc=$(OBJECT_EXTENSION))
 DEPENDENCIES := $(OBJECTS:%$(OBJECT_EXTENSION)=%$(DEP_EXTENSION))
-EXTERNAL_LIBS := $(LIBDAV1D_LIBS)
+EXTERNAL_LIBS := $(LIBDAV1D_LIBS) $(LIBAVIF_LIBS)
+
+INCFLAGS += -I$(DEPENDENCY_OUTPUT_DIRECTORY)/include
 
 .PHONY:: all archive clean
 
@@ -123,14 +133,13 @@ archive: $(ARCHIVE)
 
 clean::
 	rm -f $(OBJECTS) $(OBJECTS_BIN) $(BINARY) $(BINARY_STRIPPED) $(ARCHIVE) $(DEPENDENCIES)
-	rm -rf external/dav1d/$(BUILD_DIR_EXTERNAL_NAME)
+	rm -rf $(DEPENDENCY_SOURCE_DIRECTORY) $(DEPENDENCY_BUILD_DIRECTORY) $(DEPENDENCY_OUTPUT_DIRECTORY)
 
-external/dav1d/$(BUILD_DIR_EXTERNAL_NAME)/include/dav1d/version.h: external/dav1d/$(BUILD_DIR_EXTERNAL_NAME)/src/libdav1d.a
+$(DEPENDENCY_SOURCE_DIRECTORY):
+	mkdir -p $@
 
-external/libavif/src/codec_dav1d.c: external/dav1d/$(BUILD_DIR_EXTERNAL_NAME)/include/dav1d/version.h
-
-external/dav1d/$(BUILD_DIR_EXTERNAL_NAME)/src/libdav1d.a:
-	cd external/dav1d && meson setup $(BUILD_DIR_EXTERNAL_NAME) --buildtype release -Ddefault_library=static --cross-file ../meson_toolchains/mingw32_$(TARGET_ARCH)_meson.ini && ninja -C $(BUILD_DIR_EXTERNAL_NAME)
+$(DEPENDENCY_OUTPUT_DIRECTORY):
+	mkdir -p $@
 
 $(ARCHIVE): $(BINARY_STRIPPED) $(EXTRA_DIST)
 	@printf '\t%s %s\n' 7Z $@
@@ -146,3 +155,66 @@ $(BINARY): $(OBJECTS) $(EXTERNAL_LIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_LIB) -o $@ $^ $(LDLIBS)
 
 -include $(DEPENDENCIES)
+
+extractor$(OBJECT_EXTENSION): $(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libavif.a
+
+DEPENDENCY_SOURCE_DIRECTORY_DAV1D := $(DEPENDENCY_SOURCE_DIRECTORY)/dav1d
+DEPENDENCY_SOURCE_DIRECTORY_LIBAVIF := $(DEPENDENCY_SOURCE_DIRECTORY)/libavif
+
+DEPENDENCY_SOURCE_FILE_DAV1D := $(DEPENDENCY_SOURCE_DIRECTORY)/dav1d.tar.bz2
+DEPENDENCY_SOURCE_FILE_LIBAVIF := $(DEPENDENCY_SOURCE_DIRECTORY)/libavif.tar.gz
+
+DEPENDENCY_SOURCE_URL_DAV1D := https://code.videolan.org/videolan/dav1d/-/archive/1.0.0/dav1d-1.0.0.tar.bz2
+DEPENDENCY_SOURCE_URL_LIBAVIF := https://github.com/AOMediaCodec/libavif/archive/refs/tags/v0.11.0.tar.gz
+
+$(DEPENDENCY_SOURCE_FILE_DAV1D): | $(DEPENDENCY_SOURCE_DIRECTORY)
+	curl --location --output $@ $(DEPENDENCY_SOURCE_URL_DAV1D)
+
+$(DEPENDENCY_SOURCE_FILE_LIBAVIF): | $(DEPENDENCY_SOURCE_DIRECTORY)
+	curl --location --output $@ $(DEPENDENCY_SOURCE_URL_LIBAVIF)
+
+$(DEPENDENCY_SOURCE_DIRECTORY_DAV1D): $(DEPENDENCY_SOURCE_FILE_DAV1D)
+	mkdir -p $@
+	tar -x -f $< -C $@ --strip-components 1
+
+$(DEPENDENCY_SOURCE_DIRECTORY_LIBAVIF): $(DEPENDENCY_SOURCE_FILE_LIBAVIF)
+	mkdir -p $@
+	tar -x -f $< -C $@ --strip-components 1
+
+$(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libdav1d.a: | $(DEPENDENCY_SOURCE_DIRECTORY_DAV1D) $(DEPENDENCY_OUTPUT_DIRECTORY)
+	PKG_CONFIG_PATH=$(DEPENDENCY_OUTPUT_DIRECTORY)/lib/pkgconfig \
+	cd $(DEPENDENCY_SOURCE_DIRECTORY_DAV1D) && \
+		meson setup $(DEPENDENCY_BUILD_DIRECTORY_DAV1D) \
+			--prefix "$(DEPENDENCY_OUTPUT_DIRECTORY)" \
+			--buildtype release \
+			-Ddefault_library=static \
+			--cross-file $(abspath external/meson_toolchains/mingw32_$(TARGET_ARCH)_meson.ini) && \
+		ninja -C $(DEPENDENCY_BUILD_DIRECTORY_DAV1D) && \
+		ninja -C $(DEPENDENCY_BUILD_DIRECTORY_DAV1D) install
+
+$(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libavif.a: $(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libdav1d.a | $(DEPENDENCY_SOURCE_DIRECTORY_LIBAVIF) $(DEPENDENCY_OUTPUT_DIRECTORY)
+	PKG_CONFIG_PATH=$(DEPENDENCY_OUTPUT_DIRECTORY)/lib/pkgconfig \
+	cmake \
+		-B $(DEPENDENCY_BUILD_DIRECTORY_LIBAVIF) \
+		-S $(DEPENDENCY_SOURCE_DIRECTORY_LIBAVIF) \
+		-DCMAKE_SYSTEM_NAME=Windows \
+		-DCMAKE_SYSTEM_PROCESSOR=$(TARGET_CMAKE_SYSTEM_PROCESSOR) \
+		-DCMAKE_FIND_ROOT_PATH=/dev/null \
+		-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+		-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+		-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+		-DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
+		-DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=TRUE \
+		-DCMAKE_C_COMPILER=$(CC) \
+		-DCMAKE_CXX_COMPILER=$(CXX) \
+		-DCMAKE_RC_COMPILER=$(WINDRES) \
+		-DCMAKE_INSTALL_PREFIX="$(DEPENDENCY_OUTPUT_DIRECTORY)" \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DAVIF_CODEC_DAV1D=ON \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DDAV1D_LIBRARIES="$(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libdav1d.a" \
+		-DDAV1D_LIBRARY="$(DEPENDENCY_OUTPUT_DIRECTORY)/lib/libdav1d.a" \
+		-DDAV1D_INCLUDE_DIR="$(DEPENDENCY_OUTPUT_DIRECTORY)/include/" \
+		&& \
+	cmake --build $(DEPENDENCY_BUILD_DIRECTORY_LIBAVIF) && \
+	cmake --build $(DEPENDENCY_BUILD_DIRECTORY_LIBAVIF) --target install
