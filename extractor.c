@@ -138,20 +138,12 @@ cleanup:
 }
 
 BOOL IsSupportedEx(const char *data) {
-	const char header[] = {0x00, 0x00, 0x00, '?', 'f', 't',
-						   'y',  'p',  'a',  'v',  'i', 'f'};
-	for (int i = 0; i < sizeof(header); i++)
+	if(strcmp(data + 4, "ftypavif") == 0)
 	{
-		if (header[i] == '?')
-		{
-			continue;
-		}
-		if (data[i] != header[i])
-		{
-			return FALSE;
-		}
+		return TRUE;
 	}
-	return TRUE;
+
+	return FALSE;
 }
 
 int GetPictureInfoEx(size_t data_size, const char *data, SusiePictureInfo *picture_info)
