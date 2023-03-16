@@ -23,9 +23,9 @@ const char *plugin_info[4] = {
 const int header_size = 64;
 
 int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
-				   BITMAPFILEHEADER *bitmap_file_header,
-				   BITMAPINFOHEADER *bitmap_info_header, uint8_t **data) {
-
+				   HANDLE* h_bitmap_info,
+				   HANDLE* h_bitmap_data) {
+	BITMAPINFOHEADER* bitmap_info_header = NULL;
 	uint8_t *bitmap_data = NULL;
 
 	int ret_result = -1;
@@ -58,9 +58,15 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		rgb.depth = 8;
 		rgb.format = AVIF_RGB_FORMAT_BGRA;
 
-		bitmap_data = (uint8_t *)malloc(sizeof(uint8_t) * bit_length * height);
+		*h_bitmap_data = LocalAlloc(LMEM_MOVEABLE, sizeof(uint8_t) * bit_length * height);
+		if (!*h_bitmap_data)
+		{
+			goto cleanup;
+		}
+		bitmap_data = (uint8_t*)LocalLock(*h_bitmap_data);
 		if (!bitmap_data)
 		{
+			LocalFree(*h_bitmap_data);
 			goto cleanup;
 		}
 		rgb.pixels = bitmap_data;
@@ -101,36 +107,41 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		goto cleanup;
 	}
 
-	*data = bitmap_data;
+	*h_bitmap_info = LocalAlloc(LMEM_MOVEABLE | LMEM_ZEROINIT, sizeof(BITMAPINFOHEADER));
+	if (NULL == *h_bitmap_info)
+	{
+		goto cleanup;
+	}
+	bitmap_info_header = (BITMAPINFOHEADER*)LocalLock(*h_bitmap_info);
+	if (NULL == bitmap_info_header)
+	{
+		LocalFree(*h_bitmap_info);
+		goto cleanup;
+	}
 
-	memset(bitmap_file_header, 0, sizeof(BITMAPFILEHEADER));
-	memset(bitmap_info_header, 0, sizeof(BITMAPINFOHEADER));
-
-	bitmap_file_header->bfType = 'M' * 256 + 'B';
-	bitmap_file_header->bfSize = sizeof(BITMAPFILEHEADER) +
-								 sizeof(BITMAPINFOHEADER) +
-								 sizeof(uint8_t) * bit_length * height;
-	bitmap_file_header->bfOffBits =
-		sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-	bitmap_file_header->bfReserved1 = 0;
-	bitmap_file_header->bfReserved2 = 0;
-
-	bitmap_info_header->biSize = 40;
+	bitmap_info_header->biSize = sizeof(BITMAPINFOHEADER);
 	bitmap_info_header->biWidth = width;
 	bitmap_info_header->biHeight = height;
 	bitmap_info_header->biPlanes = 1;
 	bitmap_info_header->biBitCount = 32;
-	bitmap_info_header->biCompression = 0;
-	bitmap_info_header->biSizeImage = bitmap_file_header->bfSize;
-	bitmap_info_header->biXPelsPerMeter = bitmap_info_header->biYPelsPerMeter =
-		0;
-	bitmap_info_header->biClrUsed = 0;
-	bitmap_info_header->biClrImportant = 0;
+	bitmap_info_header->biCompression = BI_RGB;
+	bitmap_info_header->biSizeImage = sizeof(uint8_t) * bit_length * height;
+
+	LocalUnlock(*h_bitmap_data);
+	LocalUnlock(*h_bitmap_info);
 	ret_result = 0;
 cleanup:
 	if (ret_result && bitmap_data)
 	{
-		free(bitmap_data);
+		LocalUnlock(*h_bitmap_data);
+		LocalFree(*h_bitmap_data);
+		*h_bitmap_data = NULL;
+	}
+	if (ret_result && bitmap_info_header)
+	{
+		LocalUnlock(*h_bitmap_info);
+		LocalFree(*h_bitmap_info);
+		*h_bitmap_info = NULL;
 	}
 	avifDecoderDestroy(decoder);
 	return ret_result;
@@ -181,53 +192,12 @@ cleanup:
 }
 
 int GetPictureEx(size_t data_size, HANDLE *bitmap_info, HANDLE *bitmap_data, SPI_PROGRESS progress_callback, intptr_t user_data, const char *data) {
-	uint8_t *data_u8;
-	BITMAPINFOHEADER bitmap_info_header;
-	BITMAPFILEHEADER bitmap_file_header;
-	BITMAPINFO *bitmap_info_locked;
-	unsigned char *bitmap_data_locked;
-
 	if (progress_callback != NULL)
 		if (progress_callback(1, 1, user_data))
 			return SPI_ABORT;
 
-	if (getBMPFromAVIF((uint8_t *)data, data_size, &bitmap_file_header,
-						&bitmap_info_header, &data_u8))
+	if (getBMPFromAVIF((const uint8_t*)data, data_size, bitmap_info, bitmap_data))
 		return SPI_MEMORY_ERROR;
-	*bitmap_info = LocalAlloc(LMEM_MOVEABLE, sizeof(BITMAPINFOHEADER));
-	*bitmap_data = LocalAlloc(LMEM_MOVEABLE, bitmap_file_header.bfSize -
-												 bitmap_file_header.bfOffBits);
-	if (*bitmap_info == NULL || *bitmap_data == NULL) {
-		if (*bitmap_info != NULL)
-			LocalFree(*bitmap_info);
-		if (*bitmap_data != NULL)
-			LocalFree(*bitmap_data);
-		return SPI_NO_MEMORY;
-	}
-	bitmap_info_locked = (BITMAPINFO *)LocalLock(*bitmap_info);
-	bitmap_data_locked = (unsigned char *)LocalLock(*bitmap_data);
-	if (bitmap_info_locked == NULL || bitmap_data_locked == NULL) {
-		LocalFree(*bitmap_info);
-		LocalFree(*bitmap_data);
-		return SPI_MEMORY_ERROR;
-	}
-	bitmap_info_locked->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bitmap_info_locked->bmiHeader.biWidth = bitmap_info_header.biWidth;
-	bitmap_info_locked->bmiHeader.biHeight = bitmap_info_header.biHeight;
-	bitmap_info_locked->bmiHeader.biPlanes = 1;
-	bitmap_info_locked->bmiHeader.biBitCount = 32;
-	bitmap_info_locked->bmiHeader.biCompression = BI_RGB;
-	bitmap_info_locked->bmiHeader.biSizeImage = 0;
-	bitmap_info_locked->bmiHeader.biXPelsPerMeter = 0;
-	bitmap_info_locked->bmiHeader.biYPelsPerMeter = 0;
-	bitmap_info_locked->bmiHeader.biClrUsed = 0;
-	bitmap_info_locked->bmiHeader.biClrImportant = 0;
-	memcpy(bitmap_data_locked, data_u8,
-		   bitmap_file_header.bfSize - bitmap_file_header.bfOffBits);
-
-	LocalUnlock(*bitmap_info);
-	LocalUnlock(*bitmap_data);
-	free(data_u8);
 
 	if (progress_callback != NULL)
 		if (progress_callback(1, 1, user_data))
