@@ -65,7 +65,6 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		}
 		rgb.pixels = bitmap_data;
 		rgb.rowBytes = sizeof(uint8_t) * bit_length;
-		memset(bitmap_data, 0, bit_length * height);
 		if (avifImageYUVToRGB(decoder->image, &rgb) != AVIF_RESULT_OK)
 		{
 			goto cleanup;
@@ -73,11 +72,11 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		// Flip along the horizontal axis
 		for (int j = 0; j < height / 2; j++)
 		{
-			uint8_t *curbit_1 = bitmap_data + j * bit_length;
-			uint8_t *curbit_2 = bitmap_data + (height - (1 + j)) * bit_length;
-			for (int i = 0; i < bit_width; i++)
+			DWORD *curbit_1 = (DWORD*)(bitmap_data + j * bit_length);
+			DWORD *curbit_2 = (DWORD*)(bitmap_data + (height - (1 + j)) * bit_length);
+			for (int i = 0; i < width; i++)
 			{
-				uint8_t tmp = curbit_1[i];
+				DWORD tmp = curbit_1[i];
 				curbit_1[i] = curbit_2[i];
 				curbit_2[i] = tmp;
 			}
