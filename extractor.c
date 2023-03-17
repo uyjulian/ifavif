@@ -148,7 +148,7 @@ cleanup:
 }
 
 BOOL IsSupportedEx(const char *data) {
-	if(strcmp(data + 4, "ftypavif") == 0)
+	if(strncmp(data + 4, "ftypavif", 8) == 0)
 	{
 		return TRUE;
 	}
