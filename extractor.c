@@ -67,6 +67,7 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		if (!bitmap_data)
 		{
 			LocalFree(*h_bitmap_data);
+			*h_bitmap_data = NULL;
 			goto cleanup;
 		}
 		rgb.pixels = bitmap_data;
@@ -116,6 +117,7 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 	if (NULL == bitmap_info_header)
 	{
 		LocalFree(*h_bitmap_info);
+		*h_bitmap_info = NULL;
 		goto cleanup;
 	}
 
