@@ -88,22 +88,6 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 				curbit_2[i] = tmp;
 			}
 		}
-#if 0
-		for (int j = 0; j < height; j++) {
-			uint8_t *curbit = bitmap_data + (height - (1 + j)) * bit_length;
-			for (int i = 0; i < width; i++) {
-				curbit[0] =
-					rgb.pixels[i + (j * rgb.rowBytes) + 2]; // B
-				curbit[1] =
-					rgb.pixels[i + (j * rgb.rowBytes) + 1]; // G
-				curbit[2] =
-					rgb.pixels[i + (j * rgb.rowBytes) + 0]; // R
-				curbit[3] =
-					rgb.pixels[i + (j * rgb.rowBytes) + 3]; // A
-				curbit += 4;
-			}
-		}
-#endif
 	} else {
 		goto cleanup;
 	}
