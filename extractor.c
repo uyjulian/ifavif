@@ -35,8 +35,11 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 	int bit_width, bit_length;
 	avifRGBImage rgb;
 	memset(&rgb, 0, sizeof(rgb));
+	SYSTEM_INFO info;
 
 	avifDecoder *decoder = avifDecoderCreate();
+	GetSystemInfo(&info);
+	decoder->maxThreads = info.dwNumberOfProcessors;
 	avifResult result = avifDecoderSetIOMemory(decoder, input_data, file_size);
 	if (result != AVIF_RESULT_OK)
 	{
@@ -57,6 +60,7 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		avifRGBImageSetDefaults(&rgb, decoder->image);
 		rgb.depth = 8;
 		rgb.format = AVIF_RGB_FORMAT_BGRA;
+		rgb.maxThreads = info.dwNumberOfProcessors;
 
 		*h_bitmap_data = LocalAlloc(LMEM_MOVEABLE, sizeof(uint8_t) * bit_length * height);
 		if (!*h_bitmap_data)
