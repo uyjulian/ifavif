@@ -82,7 +82,7 @@
       "steps" : [
         {
           "name" : "Checkout repository",
-          "uses" : "actions/checkout@v2",
+          "uses" : "actions/checkout@v3",
           "with" : {
             "submodules" : "recursive"
           }
@@ -111,7 +111,7 @@
         },
         {
           "name" : "Upload artifact",
-          "uses" : "actions/upload-artifact@master",
+          "uses" : "actions/upload-artifact@v4",
           "with" : {
             "name" : "binary-win32-${{ matrix.platform.target-arch }}-${{ matrix.platform.compiler }}",
             "path" : "**/**.${{ matrix.platform.target-arch }}.${{ matrix.platform.compiler }}.7z"
@@ -129,7 +129,7 @@
       "steps" : [
         {
           "name" : "Download all artifacts",
-          "uses" : "actions/download-artifact@v3"
+          "uses" : "actions/download-artifact@v4"
         },
         {
           "name" : "Create release",
