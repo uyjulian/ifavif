@@ -1,4 +1,0 @@
-[submodule "external/meson_toolchains"]
-	path = external/meson_toolchains
-	url = https://github.com/uyjulian/meson_toolchains.git
-	ignore = dirty
