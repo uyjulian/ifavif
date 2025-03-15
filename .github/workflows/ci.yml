@@ -110,8 +110,12 @@
           "run" : "curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20220323/llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64.tar.xz\ntar xvf llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64.tar.xz\nmv llvm-mingw-20220323-msvcrt-ubuntu-18.04-x86_64 /opt/llvm-mingw\nexport PATH=\"/opt/llvm-mingw/bin:$PATH\"\necho \"/opt/llvm-mingw/bin\" >> $GITHUB_PATH"
         },
         {
+          "name" : "Configure project",
+          "run" : "cmake -S . -B build -DMY_ARCHIVE_NAME=${GITHUB_REPOSITORY#*/}.${{ matrix.platform.target-arch }}.${{ matrix.platform.compiler }}.7z -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.platform.cmake-system-compiler }} -DCMAKE_FIND_ROOT_PATH=/dev/null -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY -DCMAKE_C_COMPILER=${{ matrix.platform.triplet }}-gcc -DCMAKE_CXX_COMPILER=${{ matrix.platform.triplet }}-g++ -DCMAKE_RC_COMPILER=${{ matrix.platform.triplet }}-windres -DCMAKE_BUILD_TYPE=Release"
+        },
+        {
           "name" : "Compile project",
-          "run" : "make TARGET_ARCH=${{ matrix.platform.target-arch }} ARCHIVE=\\$\\(PROJECT_BASENAME\\).${{ matrix.platform.target-arch }}.${{ matrix.platform.compiler }}.7z archive -j$(getconf _NPROCESSORS_ONLN)"
+          "run" : "cmake --build build --target archive"
         },
         {
           "name" : "Upload artifact",

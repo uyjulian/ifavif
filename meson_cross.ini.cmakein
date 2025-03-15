@@ -1,0 +1,15 @@
+
+[binaries]
+c = '@MESON_CROSS_C@'
+cpp = '@MESON_CROSS_CPP@'
+ar = '@MESON_CROSS_AR@'
+strip = '@MESON_CROSS_STRIP@'
+windres = '@MESON_CROSS_WINDRES@'
+objcopy = '@MESON_CROSS_OBJCOPY@'
+# exe_wrapper = '/usr/local/bin/wine'
+
+[host_machine]
+system = 'windows'
+cpu_family = '@MESON_CROSS_CPU_FAMILY@'
+cpu = '@MESON_CROSS_CPU@'
+endian = 'little'

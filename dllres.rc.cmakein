@@ -1,0 +1,47 @@
+/////////////////////////////////////////////
+//                                         //
+//    Copyright (C) 2019-2019 Julian Uy    //
+//  https://sites.google.com/site/awertyb  //
+//                                         //
+//   See details of license at "LICENSE"   //
+//                                         //
+/////////////////////////////////////////////
+
+#include "windows.h"
+
+#define MACRO_TO_STRING(x) #x
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1, 0, 0, 0
+PRODUCTVERSION 1, 0, 0, 0
+FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+FILEFLAGS 0x1L
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "041104b0"
+BEGIN
+VALUE "Comments", "@MY_LIBRARY_RC_COMMENTS@"
+VALUE "FileDescription", "@MY_LIBRARY_RC_FILEDESCRIPTION@"
+VALUE "FileVersion", "@MY_LIBRARY_RC_FILEVERSION@"
+VALUE "InternalName", "@MY_LIBRARY_RC_INTERNALNAME@"
+VALUE "LegalCopyright", "@MY_LIBRARY_RC_LEGALCOPYRIGHT@"
+VALUE "OriginalFilename", "@MY_LIBRARY_RC_ORIGINALFILENAME@"
+VALUE "ProductName", "@MY_LIBRARY_RC_PRODUCTNAME@"
+VALUE "ProductVersion", "@MY_LIBRARY_RC_PRODUCTVERSION@"
+END
+END
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0x411, 1200
+END
+END
