@@ -14,14 +14,16 @@ The following binaries are available:
 
 ## Preparing the environment
 
-* Ubuntu
-```
-$ sudo apt install mingw-w64 meson nasm
-```
+Install the `act` tool: https://nektosact.com/installation/index.html
 
 ## Building
 
-After cloning submodules and preparing the environment, a simple invocation of `make` will generate `ifavif.spi`.  
+```
+$ git clone https://github.com/uyjulian/ifpng.git
+$ cd ifpng
+$ act run --artifact-server-path $PWD/build-artifacts
+```
+Output artifacts will be in `build-artifacts` folder.
 
 ## How to use
 
