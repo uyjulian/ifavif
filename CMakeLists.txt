@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Copyright (c) ifavif developers
 
 cmake_minimum_required(VERSION 3.0)
@@ -146,7 +147,7 @@ set(MY_LIBRARY_RC_COMMENTS "Source code for the latest version of this product i
 set(MY_LIBRARY_RC_FILEDESCRIPTION "AVIF Plugin for Susie Image Viewer")
 set(MY_LIBRARY_RC_FILEVERSION "${CUR_GIT_TAG}")
 set(MY_LIBRARY_RC_INTERNALNAME "ifavif")
-set(MY_LIBRARY_RC_LEGALCOPYRIGHT "Copyright (C) 2019-2019 Julian Uy; This product is licensed under the MIT license.")
+set(MY_LIBRARY_RC_LEGALCOPYRIGHT "Copyright (C) ifavif developers; This product is licensed under the MIT license.")
 set(MY_LIBRARY_RC_ORIGINALFILENAME "ifavif.spi")
 set(MY_LIBRARY_RC_PRODUCTNAME "AVIF Plugin for Susie Image Viewer")
 set(MY_LIBRARY_RC_PRODUCTVERSION "${CUR_GIT_TAG}")

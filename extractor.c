@@ -1,11 +1,5 @@
-/////////////////////////////////////////////
-//                                         //
-//    Copyright (C) 2019-2019 Julian Uy    //
-//  https://sites.google.com/site/awertyb  //
-//                                         //
-//   See details of license at "LICENSE"   //
-//                                         //
-/////////////////////////////////////////////
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) ifavif developers */
 
 #include "extractor.h"
 #include <avif/avif.h>
