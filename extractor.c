@@ -103,7 +103,7 @@ int getBMPFromAVIF(const uint8_t *input_data, size_t file_size,
 		goto cleanup;
 	}
 
-	bitmap_info_header->biSize = sizeof(BITMAPINFOHEADER);
+	bitmap_info_header->biSize = sizeof(BITMAPINFO);
 	bitmap_info_header->biWidth = width;
 	bitmap_info_header->biHeight = height;
 	bitmap_info_header->biPlanes = 1;
