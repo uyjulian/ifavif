@@ -8,17 +8,17 @@ Downloads
 ---------
 
 | The following binaries are available:
-| \* `Win32 (Intel 32-bit
+* `Win32 (Intel 32-bit
   GCC) <https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.intel32.gcc.7z>`__
-| \* `Win32 (Intel 64-bit
+* `Win32 (Intel 64-bit
   GCC) <https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.intel64.gcc.7z>`__
-| \* `Win32 (Intel 32-bit
+* `Win32 (Intel 32-bit
   Clang) <https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.intel32.clang.7z>`__
-| \* `Win32 (Intel 64-bit
+* `Win32 (Intel 64-bit
   Clang) <https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.intel64.clang.7z>`__
-| \* `Win32 (ARM 32-bit
+* `Win32 (ARM 32-bit
   Clang) <https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.arm32.clang.7z>`__
-| \* `Win32 (ARM 64-bit
+* `Win32 (ARM 64-bit
   Clang) <https://github.com/uyjulian/ifavif/releases/latest/download/ifavif.arm64.clang.7z>`__
 
 Preparing the environment
